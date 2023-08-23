@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "web3-data-tools"
+  site-url: "https://flashbots.github.io/web3-data-tools"
+  description: "Data tools for Web3"
+  repo-branch: main
+  repo-url: "https://github.com/flashbots/web3-data-tools"
