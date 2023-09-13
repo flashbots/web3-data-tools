@@ -3,17 +3,17 @@
 # %% auto 0
 __all__ = ['FIRST_POS_BLOCK', 'MultiRPCWeb3']
 
-# %% ../nbs/01_web3.ipynb 3
+# %% ../nbs/01_web3.ipynb 5
 from functools import update_wrapper
 import inspect
 
 from fastcore.all import custom_dir
 from web3 import Web3, AsyncWeb3
 
-# %% ../nbs/01_web3.ipynb 4
+# %% ../nbs/01_web3.ipynb 6
 FIRST_POS_BLOCK = 15537394
 
-# %% ../nbs/01_web3.ipynb 5
+# %% ../nbs/01_web3.ipynb 8
 class MultiRPCWeb3:
     """Web3 object that tries to execute a method in multiple RPCs until one succeeds."""
 

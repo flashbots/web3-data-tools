@@ -17,7 +17,7 @@ from web3_data_tools.web3 import *
 ```
 
 ``` python
-w3 = MultiRPCWeb3.from_rpcs('http://fail_rpc', 'http://good_rpc')
+w3 = MultiRPCWeb3.from_rpcs('http://bad_rpc', 'http://good_rpc')
 ```
 
 ``` python

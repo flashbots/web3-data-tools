@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['FIRST_POS_SLOT', 'fb', 'mp', 'mr', 'mf', 'ed', 'bn', 'ul', 'ag', 'ae', 'sr', 'wm', 'all_relays', 'Relay']
 
-# %% ../nbs/02_mev_boost.ipynb 4
+# %% ../nbs/02_mev_boost.ipynb 5
 from bisect import bisect_left
 from functools import cache
 
@@ -12,10 +12,10 @@ import requests
 from .web3 import MultiRPCWeb3, FIRST_POS_BLOCK
 from .core import interpolation_search
 
-# %% ../nbs/02_mev_boost.ipynb 6
+# %% ../nbs/02_mev_boost.ipynb 7
 FIRST_POS_SLOT = 4700013 
 
-# %% ../nbs/02_mev_boost.ipynb 7
+# %% ../nbs/02_mev_boost.ipynb 8
 fb = "https://boost-relay.flashbots.net"
 # et = "https://bloxroute.ethical.blxrbdn.com"
 mp = "https://bloxroute.max-profit.blxrbdn.com"
@@ -31,15 +31,14 @@ ae = "https://aestus.live"
 sr = "https://mainnet-relay.securerpc.com/"
 wm = "https://relay.wenmerge.com/"
 
-# %% ../nbs/02_mev_boost.ipynb 8
-all_relays = [fb, mp, mr, mf, ed, bn, ul, ag, ae]
+# %% ../nbs/02_mev_boost.ipynb 9
+all_relays = [fb, mp, mr, mf, ed, bn, ul, ag, ae, sr, wm]
 
-# %% ../nbs/02_mev_boost.ipynb 10
+# %% ../nbs/02_mev_boost.ipynb 11
 class Relay:
-    """A class for interacting with a relay's API"""
-
+    "A class for interacting with a relay's API"
     def __init__(self, path, *rpcs):
-        """path is the base url of the relay's API"""
+        "path is the base url of the relay's API"
         self.path = path
         if len(rpcs)==1 and isinstance(rpcs[0], MultiRPCWeb3):
             self.w3 = rpcs[0]
@@ -50,7 +49,7 @@ class Relay:
 
     @cache
     def proposer_payload_delivered(self, limit=None, cursor=None, block_number=None, order_by=None):
-        """Get proposer payloads delivered by the relay"""
+        "Get proposer payloads delivered by the relay"
         self.calls += 1
         path = f'{self.path}/relay/v1/data/bidtraces/proposer_payload_delivered?'
         params = [f'limit={limit}', f'cursor={cursor}', f'block_number={block_number}', f'order_by={order_by}']
@@ -141,6 +140,7 @@ class Relay:
                 yield payload
     
     def get_payloads_between_timestamps(self, min_timestamp, max_timestamp, min_block_number=None, max_block_number=None):
+        "Returns all payloads between min_timestamp and max_timestamp, inclusive."
         min_slot = self.find_slot_at_timestamp(min_timestamp, how='right')
         if min_slot is None:
             return []
@@ -148,6 +148,7 @@ class Relay:
         return list(self.iter_payloads_in_slot_range(min_slot, max_slot))
 
     def get_payloads_between_block_numbers(self, min_block_number, max_block_number):
+        "Returns all payloads between min_block_number and max_block_number, inclusive."
         min_slot = self.find_slot_at_block_number(min_block_number, how='right')
         if min_slot is None:
             return []
