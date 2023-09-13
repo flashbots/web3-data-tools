@@ -13,33 +13,13 @@ pip install web3_data_tools
 
 ``` python
 from web3_data_tools.core import *
+from web3_data_tools.web3 import *
 ```
 
 ``` python
-w3 = MultiRPCWeb3.from_rpcs('http://fail_rpc', 'http://localhost:5919')
+w3 = MultiRPCWeb3.from_rpcs('http://fail_rpc', 'http://good_rpc')
 ```
 
 ``` python
-block_timestamps = BlockTimestamps(w3)
+interpolation_search(w3, 1692548195)
 ```
-
-``` python
-interpolation_search(block_timestamps, 1692548195)
-```
-
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-    RPC RPC connection http://fail_rpc failed
-    Trying RPC RPC connection http://localhost:5919
-
-    17957091
