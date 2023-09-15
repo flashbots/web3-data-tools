@@ -10,6 +10,8 @@ import inspect
 from fastcore.all import custom_dir
 from web3 import Web3, AsyncWeb3
 
+from .core import interpolation_search
+
 # %% ../nbs/01_web3.ipynb 6
 FIRST_POS_BLOCK = 15537394
 
@@ -113,3 +115,7 @@ class MultiRPCWeb3:
     
     def __len__(self):
         return self.eth.get_block_number()
+    
+    def find_block_at_timestamp(self, timestamp, low=None, high=None, how='after'):
+        how = {'after': 'right', 'before': 'left'}[how]
+        return interpolation_search(self, timestamp, low=low, high=high, how=how)
