@@ -4,6 +4,7 @@
 __all__ = ['FIRST_POS_BLOCK', 'MultiRPCWeb3']
 
 # %% ../nbs/01_web3.ipynb 5
+from datetime import datetime
 from functools import update_wrapper
 import inspect
 
@@ -117,5 +118,11 @@ class MultiRPCWeb3:
         return self.eth.get_block_number()
     
     def find_block_at_timestamp(self, timestamp, low=None, high=None, how='after'):
+        if isinstance(timestamp, datetime):
+            timestamp = timestamp.timestamp()
         how = {'after': 'right', 'before': 'left'}[how]
+        if high is None:
+            highs = [k for k in self.cache if self.cache[k] > timestamp]
+            if len(highs) > 0:
+                high = min(highs)
         return interpolation_search(self, timestamp, low=low, high=high, how=how)
