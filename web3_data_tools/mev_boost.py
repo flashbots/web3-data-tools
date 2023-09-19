@@ -94,7 +94,7 @@ class Relay:
         if self.w3[low_block] > timestamp:
             return None
         block_number = interpolation_search(self.w3, timestamp, low=low_block, high=high_block, how=how)
-        out = self.find_slot_at_block_number(block_number, low=low_slot, high=high_slot, how=how)
+        out = self.find_slot_at_block_number(block_number, low=low_slot, high=high_slot, how='right')
         return out
 
     def get_slot_payload(self, slot):
@@ -133,10 +133,11 @@ class Relay:
         for _ in range((max_slot-min_slot)//100+1):
             payloads = self.proposer_payload_delivered(limit=100, cursor=cursor)
             for payload in payloads:
-                cursor = payload['slot'] - 1
-                if cursor < min_slot:
+                slot = payload['slot'] 
+                if slot < min_slot:
                     return
                 yield payload
+            cursor = slot - 1
     
     def get_payloads_between_timestamps(self, min_timestamp, max_timestamp, min_block_number=None, max_block_number=None):
         "Returns all payloads between min_timestamp and max_timestamp, inclusive."
@@ -148,7 +149,7 @@ class Relay:
 
     def get_payloads_between_block_numbers(self, min_block_number, max_block_number):
         "Returns all payloads between min_block_number and max_block_number, inclusive."
-        min_slot = self.find_slot_at_block_number(min_block_number - 1, how='right')
+        min_slot = self.find_slot_at_block_number(min_block_number, how='right')
         if min_slot is None:
             return []
         max_slot = self.find_slot_at_block_number(max_block_number + 1, low=min_slot, how='left')
