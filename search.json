@@ -1,0 +1,65 @@
+[
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "core",
+    "section": "",
+    "text": "source\n\ninterpolation_search\n\n interpolation_search (o, target, low=None, high=None, how='left')\n\nInterpolation search algorithm to find the closest value to target in the sorted list o."
+  },
+  {
+    "objectID": "mev_boost.html",
+    "href": "mev_boost.html",
+    "title": "MEV-Boost Relays",
+    "section": "",
+    "text": "FIRST_POS_SLOT = 4700013\n\n\nfb = \"https://boost-relay.flashbots.net\"\n# et = \"https://bloxroute.ethical.blxrbdn.com\"\nmp = \"https://bloxroute.max-profit.blxrbdn.com\"\nmr = \"https://bloxroute.regulated.blxrbdn.com\"\nmf = \"https://mainnet-relay.securerpc.com\"\ned = \"https://relay.edennetwork.io\"\nbn = \"https://builder-relay-mainnet.blocknative.com\"\n# rl = \"https://relayooor.wtf\"\nul = \"https://relay.ultrasound.money\"\nag = \"https://agnostic-relay.net\"\nae = \"https://mainnet.aestus.live\"\nae = \"https://aestus.live\"\nwm = \"https://relay.wenmerge.com/\"\n\n\nall_relays = [fb, mp, mr, mf, ed, bn, ul, ag, ae, wm]\n\n\nsource\n\n\n\n Relay (path, *rpcs)\n\nA class for interacting with a relay’s API\n\nsource\n\n\n\n\n Relay.proposer_payload_delivered (limit=None, cursor=None,\n                                   block_number=None, order_by=None)\n\nGet proposer payloads delivered by the relay\n\nsource\n\n\n\n\n Relay.get_payloads_between_timestamps (min_timestamp, max_timestamp,\n                                        min_block_number=None,\n                                        max_block_number=None)\n\n\nsource\n\n\n\n\n Relay.get_payloads_between_block_numbers (min_block_number,\n                                           max_block_number)"
+  },
+  {
+    "objectID": "mev_boost.html#constants",
+    "href": "mev_boost.html#constants",
+    "title": "MEV-Boost Relays",
+    "section": "",
+    "text": "FIRST_POS_SLOT = 4700013\n\n\nfb = \"https://boost-relay.flashbots.net\"\n# et = \"https://bloxroute.ethical.blxrbdn.com\"\nmp = \"https://bloxroute.max-profit.blxrbdn.com\"\nmr = \"https://bloxroute.regulated.blxrbdn.com\"\nmf = \"https://mainnet-relay.securerpc.com\"\ned = \"https://relay.edennetwork.io\"\nbn = \"https://builder-relay-mainnet.blocknative.com\"\n# rl = \"https://relayooor.wtf\"\nul = \"https://relay.ultrasound.money\"\nag = \"https://agnostic-relay.net\"\nae = \"https://mainnet.aestus.live\"\nae = \"https://aestus.live\"\nwm = \"https://relay.wenmerge.com/\"\n\n\nall_relays = [fb, mp, mr, mf, ed, bn, ul, ag, ae, wm]\n\n\nsource\n\n\n\n Relay (path, *rpcs)\n\nA class for interacting with a relay’s API\n\nsource\n\n\n\n\n Relay.proposer_payload_delivered (limit=None, cursor=None,\n                                   block_number=None, order_by=None)\n\nGet proposer payloads delivered by the relay\n\nsource\n\n\n\n\n Relay.get_payloads_between_timestamps (min_timestamp, max_timestamp,\n                                        min_block_number=None,\n                                        max_block_number=None)\n\n\nsource\n\n\n\n\n Relay.get_payloads_between_block_numbers (min_block_number,\n                                           max_block_number)"
+  },
+  {
+    "objectID": "mev_boost.html#example",
+    "href": "mev_boost.html#example",
+    "title": "MEV-Boost Relays",
+    "section": "Example",
+    "text": "Example\n\nimport os\nfrom datetime import datetime, timedelta, timezone\nimport pandas as pd\n\n\nRPC = os.environ['RPC']\nrelay = Relay(ae, RPC)\n\nFetch payloads by timestamp\n\nmin_datetime = datetime(2023, 8, 1, tzinfo=timezone.utc)\nmax_datetime = min_datetime + timedelta(days=1)\nmin_timestamp = min_datetime.timestamp()\nmax_timestamp = max_datetime.timestamp()\n\n\npayloads = relay.get_payloads_between_timestamps(min_timestamp, max_timestamp)\n\n\nlen(payloads)\n\n328\n\n\nFetch payloads by block number\n\nw3 = MultiRPCWeb3.from_rpcs(RPC)\nmin_block_number = interpolation_search(w3, min_timestamp, low=FIRST_POS_BLOCK, how='right')\nmax_block_number = interpolation_search(w3, max_timestamp, low=min_block_number, how='left')\npayloads = relay.get_payloads_between_block_numbers(min_block_number, max_block_number)"
+  },
+  {
+    "objectID": "web3.html",
+    "href": "web3.html",
+    "title": "Web3",
+    "section": "",
+    "text": "source"
+  },
+  {
+    "objectID": "web3.html#example",
+    "href": "web3.html#example",
+    "title": "Web3",
+    "section": "Example",
+    "text": "Example\n\nfrom datetime import datetime, timezone\n\n\nw3 = MultiRPCWeb3.async_from_rpcs('http://rpc1:1235', 'http://rpc2:2345')\n\n\nw3.sort_providers(tolerance=5)\n\nRPC RPC connection http://rpc2:2345 failed\nAll the RPCs failed to execute 'get_block_number'\nRPC RPC connection http://rpc2:2345 failed\n\n\n\nlen(w3)\n\n18171842\n\n\n\nw3.find_block_at_timestamp(datetime(2022, 10, 1, tzinfo=timezone.utc).timestamp(), low=FIRST_POS_BLOCK, how='after')\n\n15649595"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "web3-data-tools",
+    "section": "",
+    "text": "pip install web3_data_tools"
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "web3-data-tools",
+    "section": "",
+    "text": "pip install web3_data_tools"
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "web3-data-tools",
+    "section": "How to use",
+    "text": "How to use\n\nfrom web3_data_tools.core import *\nfrom web3_data_tools.web3 import *\n\n\nw3 = MultiRPCWeb3.from_rpcs('http://bad_rpc', 'http://good_rpc')\n\n\ninterpolation_search(w3, 1692548195)"
+  }
+]
