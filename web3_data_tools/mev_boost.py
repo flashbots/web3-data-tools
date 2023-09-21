@@ -79,6 +79,8 @@ class Relay:
         self.getitem = self.get_slot_block_number
         if self[low] > block_number:
             return None
+        if self[len(self)] < block_number:
+            return None
         out = interpolation_search(self, block_number, low=low, high=high, how=how)
         self.getitem = self.get_slot_payload
         return out
