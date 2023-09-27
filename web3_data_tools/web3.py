@@ -31,16 +31,16 @@ class MultiRPCWeb3:
         # hardcode genesis block timestamp (RPCs don't have it right)
         self.cache = {0: 1438269973}
 
-    @classmethod 
+    @classmethod
     def from_rpcs(obj, *rpcs):
         return obj(*[Web3(Web3.HTTPProvider(rpc)) for rpc in rpcs])
 
-    @classmethod 
+    @classmethod
     def async_from_rpcs(obj, *rpcs):
         return obj(*[AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc)) for rpc in rpcs])
-    
+
     def __dir__(self): return custom_dir(self, add=self.rpcs[0].__dir__())
-        
+
     def __getattr__(self, attr):
 
         def wrapper(*args, **kwargs):
@@ -48,9 +48,9 @@ class MultiRPCWeb3:
                 try:
                     return rpc.__getattribute__(attr)(*args, **kwargs)
                 except Exception as e:
-                    print(f'RPC {provider} failed')
+                    print(f'{provider} failed with: {e}')
                     if i < len(self.providers) - 1:
-                        print(f'Trying RPC {self.providers[i+1]}')
+                        print(f'Trying {self.providers[i+1]}')
                     else:
                         print(f"All the RPCs failed to execute '{attr}'")
                         raise e
@@ -60,9 +60,9 @@ class MultiRPCWeb3:
                 try:
                     return await rpc.__getattribute__(attr)(*args, **kwargs)
                 except Exception as e:
-                    print(f'RPC {provider} failed')
+                    print(f'{provider} failed with: {e}')
                     if i < len(self.providers) - 1:
-                        print(f'Trying RPC {self.providers[i+1]}')
+                        print(f'Trying {self.providers[i+1]}')
                     else:
                         print(f"All the RPCs failed to execute '{attr}'")
                         raise e
@@ -91,7 +91,7 @@ class MultiRPCWeb3:
                 block_number = self.eth.get_block_number()
                 last_block_number.append(block_number)
             except Exception as e:
-                print(f'RPC {provider} failed')
+                print(f'{provider} failed with: {e}')
                 last_block_number.append(-1)
         max_block_number = max(last_block_number)
         for i in range(len(last_block_number)):
@@ -113,10 +113,10 @@ class MultiRPCWeb3:
             block_number = block['number']
         self.cache[block_number] = block['timestamp']
         return block['timestamp']
-    
+
     def __len__(self):
         return self.eth.get_block_number()
-    
+
     def find_block_at_timestamp(self, timestamp, low=None, high=None, how='after'):
         if isinstance(timestamp, datetime):
             timestamp = timestamp.timestamp()
