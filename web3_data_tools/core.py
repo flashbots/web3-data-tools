@@ -14,7 +14,8 @@ def interpolation_search(o, target, low=None, high=None, how='left'):
     if high is None:
         high = len(o)
     
-    assert o[low] <= target <= o[high]
+    assert o[low] <= target, f'Target {target} is smaller than the lowest value in the list, {o[low]}'
+    assert target <= o[high], f'Target {target} is larger than the highest value in the list, {o[high]}'
 
     pos = low + ((int(target) - o[low]) * (high - low)) // (o[high] - o[low])
 
