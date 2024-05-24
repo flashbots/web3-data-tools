@@ -4,14 +4,17 @@
 __all__ = ['FIRST_POS_BLOCK', 'MultiRPCWeb3']
 
 # %% ../nbs/01_web3.ipynb 5
+import asyncio
 from datetime import datetime
 from functools import update_wrapper
 import inspect
 
-from fastcore.all import custom_dir
+from fastcore.all import custom_dir, test_fail, listify
 from web3 import Web3, AsyncWeb3
+from web3.method import Method
+from web3.middleware import async_geth_poa_middleware
 
-from .core import interpolation_search
+from .core import interpolation_search, batched
 
 # %% ../nbs/01_web3.ipynb 6
 FIRST_POS_BLOCK = 15537394
@@ -20,7 +23,7 @@ FIRST_POS_BLOCK = 15537394
 class MultiRPCWeb3:
     """Web3 object that tries to execute a method in multiple RPCs until one succeeds."""
 
-    def __init__(self, *rpcs, providers=None):
+    def __init__(self, *rpcs, providers=None, poa=False):
         self.rpcs = rpcs
         self.providers = providers
         if not self.providers:
@@ -28,8 +31,18 @@ class MultiRPCWeb3:
             for rpc in self.rpcs:
                 if hasattr(rpc, 'provider'):
                     self.providers.append(rpc.provider)
+
         # hardcode genesis block timestamp (RPCs don't have it right)
         self.cache = {0: 1438269973}
+
+        # add get_block_receipts method. Some RPCs have it some don't.
+        for rpc in self.rpcs:
+            if isinstance(rpc, Web3):
+                rpc.eth.attach_methods({"get_block_receipts": Method("eth_getBlockReceipts")})
+        # self.eth.attach_methods({"get_block_receipts": Method("eth_getBlockReceipts")})
+
+        if poa:
+            self.middleware_onion.inject(async_geth_poa_middleware, layer=0)
 
     @classmethod
     def from_rpcs(obj, *rpcs):
@@ -126,3 +139,11 @@ class MultiRPCWeb3:
             if len(highs) > 0:
                 high = min(highs)
         return interpolation_search(self, timestamp, low=low, high=high, how=how)
+
+    async def aget_method(self, method, input_list, method_args=(), method_kwargs={}, batch_size=72):
+        data = []
+        for batch in batched(input_list, batch_size):
+            tasks = [self.eth.__getattr__(method)(*listify(o), *method_args, **method_kwargs) for o in batch]
+            data.extend(await asyncio.gather(*tasks))
+        return data
+
