@@ -76,7 +76,6 @@ class MultiRPCWeb3:
                     if i < len(self.providers) - 1:
                         print(f'Trying {self.providers[i+1]}')
                     else:
-                        print(f"All the RPCs failed to execute '{attr}'")
                         raise e
 
         async def awrapper(*args, **kwargs):
@@ -88,7 +87,6 @@ class MultiRPCWeb3:
                     if i < len(self.providers) - 1:
                         print(f'Trying {self.providers[i+1]}')
                     else:
-                        print(f"All the RPCs failed to execute '{attr}'")
                         raise e
 
         for rpc in self.rpcs:
@@ -117,7 +115,6 @@ class MultiRPCWeb3:
                 block_number = self.eth.get_block_number()
                 last_block_number.append(block_number)
             except Exception as e:
-                print(f'{provider} failed with: {e}')
                 last_block_number.append(-1)
         max_block_number = max(last_block_number)
         for i in range(len(last_block_number)):
@@ -145,7 +142,6 @@ class MultiRPCWeb3:
                     block_number = self.eth.get_block_number()
                 last_block_number.append(block_number)
             except Exception as e:
-                print(f'{provider} failed with: {e}')
                 last_block_number.append(-1)
         max_block_number = max(last_block_number)
         for i in range(len(last_block_number)):
