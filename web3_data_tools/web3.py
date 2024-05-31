@@ -5,25 +5,31 @@ __all__ = ['FIRST_POS_BLOCK', 'MultiRPCWeb3']
 
 # %% ../nbs/01_web3.ipynb 5
 import asyncio
+from typing import Union, Optional, Literal
 from datetime import datetime
 from functools import update_wrapper
 import inspect
 
-from fastcore.all import custom_dir, test_fail, listify
+from fastcore.all import custom_dir, test_fail, listify, test_eq, test
 from web3 import Web3, AsyncWeb3
 from web3.method import Method
 from web3.middleware import async_geth_poa_middleware
 
-from .core import interpolation_search, batched
+from .core import ainterpolation_search, interpolation_search , batched
 
 # %% ../nbs/01_web3.ipynb 6
 FIRST_POS_BLOCK = 15537394
 
-# %% ../nbs/01_web3.ipynb 8
+# %% ../nbs/01_web3.ipynb 9
 class MultiRPCWeb3:
     """Web3 object that tries to execute a method in multiple RPCs until one succeeds."""
 
-    def __init__(self, *rpcs, providers=None, poa=False):
+    def __init__(self
+                 , *rpcs # list of Web3 objects
+                 , providers=None # list of provider objects
+                 , poa=False # whether the network is a POA network
+                 ):
+        """Initialize the MultiRPCWeb3 object."""
         self.rpcs = rpcs
         self.providers = providers
         if not self.providers:
@@ -37,19 +43,24 @@ class MultiRPCWeb3:
 
         # add get_block_receipts method. Some RPCs have it some don't.
         for rpc in self.rpcs:
-            if isinstance(rpc, Web3):
+            if isinstance(rpc, (Web3, AsyncWeb3)):
                 rpc.eth.attach_methods({"get_block_receipts": Method("eth_getBlockReceipts")})
-        # self.eth.attach_methods({"get_block_receipts": Method("eth_getBlockReceipts")})
 
         if poa:
             self.middleware_onion.inject(async_geth_poa_middleware, layer=0)
 
     @classmethod
-    def from_rpcs(obj, *rpcs):
+    def from_rpcs(obj
+                  , *rpcs # list of RPC URIs
+                  ):
+        """Create a MultiRPCWeb3 object from a list of RPC URIs."""
         return obj(*[Web3(Web3.HTTPProvider(rpc)) for rpc in rpcs])
 
     @classmethod
-    def async_from_rpcs(obj, *rpcs):
+    def async_from_rpcs(obj
+                        , *rpcs # list of RPC URIs
+                        ):
+        """Create an async MultiRPCWeb3 object from a list of RPC URIs."""
         return obj(*[AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(rpc)) for rpc in rpcs])
 
     def __dir__(self): return custom_dir(self, add=self.rpcs[0].__dir__())
@@ -92,7 +103,9 @@ class MultiRPCWeb3:
                 return self.__getattribute__(attr)
         raise AttributeError(f"Attribute '{attr}' not found in any of the RPCs")
 
-    def sort_providers(self, tolerance=0):
+    def sort_providers(self
+                       , tolerance: int=0 # number of blocks to consider the same
+                       ):
         """Sort provider by block number, so that the one with the highest block number is first."""
         rpcs = self.rpcs[:]
         providers = self.providers[:]
@@ -113,9 +126,39 @@ class MultiRPCWeb3:
         index = sorted(range(len(last_block_number)), key=lambda k: last_block_number[k], reverse=True)
         self.rpcs = [rpcs[i] for i in index]
         self.providers = [providers[i] for i in index]
+        return [p.endpoint_uri for p in self.providers]
 
+    async def asort_providers(self
+                              , tolerance: int=0 # number of blocks to consider the same
+                              ):
+        """Sort provider by block number, so that the one with the highest block number is first."""
+        rpcs = self.rpcs[:]
+        providers = self.providers[:]
+        last_block_number = []
+        for i, (rpc, provider) in enumerate(zip(rpcs, providers)):
+            self.rpcs = [rpc]
+            self.providers = [provider]
+            try:
+                if inspect.iscoroutinefunction(self.eth.get_block_number):
+                    block_number = await self.eth.get_block_number()
+                else:
+                    block_number = self.eth.get_block_number()
+                last_block_number.append(block_number)
+            except Exception as e:
+                print(f'{provider} failed with: {e}')
+                last_block_number.append(-1)
+        max_block_number = max(last_block_number)
+        for i in range(len(last_block_number)):
+            if last_block_number[i] >= max_block_number - tolerance:
+                last_block_number[i] = max_block_number
+        index = sorted(range(len(last_block_number)), key=lambda k: last_block_number[k], reverse=True)
+        self.rpcs = [rpcs[i] for i in index]
+        self.providers = [providers[i] for i in index]
+        return [p.endpoint_uri for p in self.providers]
 
-    def __getitem__(self, block_number):
+    def __getitem__(self
+                    , block_number: int # block number to get the timestamp of
+                    ):
         """The user can get the timestamp of a block by using the syntax `web3[block_number]`."""
         if block_number in self.cache:
             return self.cache[block_number]
@@ -127,10 +170,35 @@ class MultiRPCWeb3:
         self.cache[block_number] = block['timestamp']
         return block['timestamp']
 
+    async def agetitem(self
+                       , block_number: int # block number to get the timestamp of
+                       ):
+        """The user can get the timestamp of a block by using the syntax `web3[block_number]`."""
+        if block_number in self.cache:
+            return self.cache[block_number]
+        if block_number==-1:
+            block_number = 'latest'
+        block = await self.eth.get_block(block_number)
+        if block_number=='latest':
+            block_number = block['number']
+        self.cache[block_number] = block['timestamp']
+        return block['timestamp']
+    
     def __len__(self):
+        """Returns the number of blocks in the blockchain."""
         return self.eth.get_block_number()
 
-    def find_block_at_timestamp(self, timestamp, low=None, high=None, how='after'):
+    async def alen(self): 
+        """Returns the number of blocks in the blockchain."""
+        return await self.eth.get_block_number()
+
+    def find_block_at_timestamp(self
+                                , timestamp: Union[datetime, int] # timestamp to search for
+                                , low: Optional[int]=None # block number to start the search from
+                                , high: Optional[int]=None # block number to end the search at
+                                , how: Literal['after', 'before'] ='after' # whether to search for the block after or before the timestamp
+                                ):
+        """Finds a block at a specific timestamp."""
         if isinstance(timestamp, datetime):
             timestamp = timestamp.timestamp()
         how = {'after': 'right', 'before': 'left'}[how]
@@ -140,7 +208,30 @@ class MultiRPCWeb3:
                 high = min(highs)
         return interpolation_search(self, timestamp, low=low, high=high, how=how)
 
-    async def aget_method(self, method, input_list, method_args=(), method_kwargs={}, batch_size=72):
+    async def afind_block_at_timestamp(self
+                                       , timestamp: Union[datetime, int] # timestamp to search for
+                                       , low: Optional[int]=None # block number to start the search from
+                                       , high: Optional[int]=None # block number to end the search at
+                                       , how: Literal['after', 'before'] ='after' # whether to search for the block after or before the timestamp
+                                       ):
+        """Finds a block at a specific timestamp."""
+        if isinstance(timestamp, datetime):
+            timestamp = timestamp.timestamp()
+        how = {'after': 'right', 'before': 'left'}[how]
+        if high is None:
+            highs = [k for k in self.cache if self.cache[k] > timestamp]
+            if len(highs) > 0:
+                high = min(highs)
+        return await ainterpolation_search(self, timestamp, low=low, high=high, how=how)
+
+    async def abatch_method(self
+                          , method # method to execute
+                          , input_list # list of arguments to pass to the method
+                          , method_args=() # extra arguments to pass to the method
+                          , method_kwargs={} # extra keyword arguments to pass to the method
+                          , batch_size=72 # batch size to use
+                          ):
+        """Execute a method asynchronously in batches."""
         data = []
         for batch in batched(input_list, batch_size):
             tasks = [self.eth.__getattr__(method)(*listify(o), *method_args, **method_kwargs) for o in batch]
