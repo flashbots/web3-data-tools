@@ -4,4 +4,9 @@ on:  [workflow_dispatch, pull_request, push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    steps: [uses: fastai/workflows/nbdev-ci@master]
+    steps:
+        - uses: AgustinSRG/eth-test-node-action@v6
+          with:
+            rpcPort: 8545 # Optional, default value is 8545. The json-RPC port
+            websocketPort: 8546 # WebSockets port, by default 8546
+        - uses: fastai/workflows/nbdev-ci@master
